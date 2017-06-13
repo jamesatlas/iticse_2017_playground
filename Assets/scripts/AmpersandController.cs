@@ -49,7 +49,7 @@ public class AmpersandController : PlayerController {
       // If our ray hits a different object than it did before, that means some
       // other object got in the way.
       if (hit.collider.gameObject != targetCell.gameObject &&
-        !(targetCell.pointer != null && hit.collider.gameObject != targetCell.pointer.gameObject)) {
+        (targetCell.pointer == null || hit.collider.gameObject != targetCell.pointer.gameObject)) {
         Depoint();
       } else {
         Vector2 perp = new Vector3(-diff.y, diff.x);
