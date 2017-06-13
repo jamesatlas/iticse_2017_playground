@@ -7,9 +7,9 @@ public abstract class PlayerController : MonoBehaviour {
 
   private FootController foot;
   public bool isAirborne;
-  private new Rigidbody2D rigidbody;
+  protected new Rigidbody2D rigidbody;
   private GameObject otherPlayer;
-  private bool isBurden;
+  public bool isBurden;
   private int otherMask;
   private bool isLocked;
   private float oomph;
@@ -38,6 +38,7 @@ public abstract class PlayerController : MonoBehaviour {
       isLocked = true;
       StartCoroutine(TransmitAndUnlock());
     }
+
   }
 
   IEnumerator TransmitAndUnlock() {
@@ -92,6 +93,31 @@ public abstract class PlayerController : MonoBehaviour {
   bool IsGrounded() {
     Collider2D hit = Physics2D.OverlapBox(foot.position, new Vector2(foot.width, foot.height), 0, Utilities.GROUND_MASK | otherMask);
     return hit != null;
+  }
+
+  public GameObject GetOnPointer() {
+    Collider2D hit = Physics2D.OverlapBox(foot.position, new Vector2(foot.width, foot.height), 0, Utilities.GROUND_MASK);
+    if (hit != null && hit.gameObject.tag == "pointer") {
+      return hit.gameObject;
+    }
+    else {
+      return null;
+    }
+  }
+
+  public bool IsConnectedToOther() {
+    if (otherPlayer != null) {
+      PlayerController other = otherPlayer.GetComponent<PlayerController>();
+
+      // check if close to other player and they are on a pointer
+      CircleCollider2D otherCollider = other.GetComponent<CircleCollider2D>();
+      ColliderDistance2D distance = rigidbody.Distance(otherCollider);
+
+      return distance.distance < otherCollider.radius;
+    }
+    else {
+      return false;
+    }
   }
 
   void OnCollisionEnter2D(Collision2D collision) {

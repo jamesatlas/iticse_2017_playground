@@ -19,6 +19,32 @@ public class StarController : PlayerController {
 
   override public void Update() {
     base.Update();
+
+    if (Input.GetButtonDown("Dereference")) {
+      // check to see if star or ampersand are on same pointer
+      GameObject on = GetOnPointer();
+      bool connected = IsConnectedToOther();
+      if (on == null && connected) {
+        on = ampersand.GetOnPointer(); // if ampersand is on a pointer and they are close
+      }
+      
+      if (on != null) {
+        PointerController pointer = on.GetComponent<PointerController>();
+        if (pointer.Target != null) {
+          // teleport the star and ampersand (if connected) on top of the target cell
+          CellController cc = pointer.Target;
+          Vector2 pos = (Vector2)cc.transform.position;
+          BoxCollider2D b = cc.transform.GetComponent<BoxCollider2D>();
+          float sizeStar = GetComponent<CircleCollider2D>().radius;
+          float sizeAmp = ampersand.GetComponent<CircleCollider2D>().radius;
+
+          gameObject.transform.position = new Vector2(pos.x - sizeStar, pos.y + b.bounds.size.y / 2 + sizeStar);
+          if (connected) {
+            ampersand.gameObject.transform.position = new Vector2(pos.x, pos.y + b.bounds.size.y / 2 + sizeAmp);
+          }
+        }
+      }
+    }
   }
 
   override public bool IsTransmittable() {

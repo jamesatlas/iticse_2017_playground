@@ -8,6 +8,7 @@ public class AmpersandController : PlayerController {
   private LineRenderer leftBarbRenderer;
   private LineRenderer rightBarbRenderer;
   private CellController targetCell;
+  
   private Vector2 targetPosition;
   private Coroutine caster;
   private StarController star;
@@ -47,15 +48,33 @@ public class AmpersandController : PlayerController {
 
       // If our ray hits a different object than it did before, that means some
       // other object got in the way.
-      if (hit.collider.gameObject != targetCell.gameObject) {
-        Depoint();  
+      if (hit.collider.gameObject != targetCell.gameObject &&
+        !(targetCell.pointer != null && hit.collider.gameObject != targetCell.pointer.gameObject)) {
+        Depoint();
       } else {
         Vector2 perp = new Vector3(-diff.y, diff.x);
-        lineRenderer.SetPosition(0, (Vector2) transform.position + diff * 0.3f); 
-        leftBarbRenderer.SetPosition(0, targetPosition + barbLength * (perp - 1.5f * diff)); 
-        rightBarbRenderer.SetPosition(0, targetPosition - barbLength * (perp + 1.5f * diff)); 
+        lineRenderer.SetPosition(0, (Vector2)transform.position + diff * 0.3f);
+        leftBarbRenderer.SetPosition(0, targetPosition + barbLength * (perp - 1.5f * diff));
+        rightBarbRenderer.SetPosition(0, targetPosition - barbLength * (perp + 1.5f * diff));
+
+
       }
     }
+
+    if (Input.GetButtonDown("Attach")) {
+      GameObject p = GetOnPointer();
+      if (p == null && IsConnectedToOther()) {
+        p = star.GetOnPointer();
+      }
+      if (p != null) {
+        PointerController sourcePointer = p.GetComponent<PointerController>();
+        sourcePointer.Target = targetCell;
+        if (IsPointerAttached()) {
+          Depoint();
+        }
+      }
+    }
+
   }
 
   void Depoint() {
@@ -101,8 +120,19 @@ public class AmpersandController : PlayerController {
       float length = proportion * maximumLength;
       hit = Physics2D.Raycast(from, diff, length, Utilities.GROUND_MASK);
       if (hit.collider != null) {
-        PointAt(hit.point); 
-        targetCell = hit.collider.gameObject.GetComponent<CellController>();
+        PointAt(hit.point);
+        GameObject hitObject = hit.collider.gameObject;
+        if (hitObject.tag == "pointer") {
+          Transform hitParent = hitObject.transform.parent;
+          // is it part of a linked cell?
+          if (hitParent != null && hitParent.gameObject.tag == "linkedCell") {
+            targetCell = hitParent.GetComponentInChildren<CellController>();
+          }
+        }
+        else if (hitObject.tag == "cell") {
+          targetCell = hitObject.GetComponent<CellController>();
+        }
+       
         targetPosition = hit.point;
         isHit = true;
       } else {
